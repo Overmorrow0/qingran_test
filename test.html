@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体质测试 - 草本饮料</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        /* Banner 样式 */
+        .banner {
+            background: linear-gradient(135deg, #8BC34A, #689F38);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .back-arrow {
+            font-size: 1.5rem;
+            margin-right: 15px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+        
+        .back-arrow:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .banner-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            flex: 1;
+            text-align: center;
+            margin-right: 30px; /* 平衡左右间距 */
+        }
+        
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: #e0e0e0;
+            border-radius: 3px;
+            margin-bottom: 40px;
+            overflow: hidden;
+        }
+
+        .progress-inner {
+            height: 100%;
+            background-color: #8BC34A;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .question-card {
+            background-color: #fff;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option {
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.2s ease;
+            color: #555;
+            font-size: 16px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .option:hover {
+            background-color: #f8f9fa;
+        }
+
+        .option:active {
+            background-color: #8BC34A;
+            color: white;
+            border-color: #8BC34A;
+            transform: scale(0.98);
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .banner {
+                padding: 12px 15px;
+            }
+            
+            .banner-title {
+                font-size: 1.1rem;
+            }
+            
+            .test-container {
+                padding: 15px;
+            }
+            
+            .question-card {
+                padding: 20px;
+            }
+            
+            .question-text {
+                font-size: 16px;
+                margin-bottom: 20px;
+            }
+            
+            .option {
+                padding: 12px;
+                font-size: 14px;
+            }
+        }
+
+        /* 加载状态 */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+            font-size: 16px;
+        }
+
+        /* 背景图样式（新增） */
+        .background-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+            opacity: 0.15; /* 透明度可根据需求调整，0-1之间取值 */
+        }
+    </style>
+</head>
+<body>
+    <!-- Banner 头部 -->
+    <div class="banner">
+        <div class="back-arrow" onclick="goBack()">←</div>
+        <div class="banner-title">体质测试</div>
+    </div>
+
+    <div class="test-container">
+        <div class="progress-bar">
+            <div class="progress-inner" id="progressInner"></div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-text" id="questionText"></div>
+            <div class="options" id="optionsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // 测试数据
+        const questions = [
+            {
+                id: 1,
+                text: "您容易疲劳吗？",
+                options: [
+                    { text: "总是，感觉浑身没劲", score: {"气虚质": 2} },
+                    { text: "经常，尤其是下午", score: {"气虚质": 1} },
+                    { text: "偶尔", score: {} },
+                    { text: "精力充沛，从不觉得累", score: {"平和质": 1} }
+                ]
+            },
+            {
+                id: 2,
+                text: "您手脚心容易发热或心烦吗？",
+                options: [
+                    { text: "经常，晚上尤其明显", score: {"阴虚质": 2} },
+                    { text: "偶尔会", score: {"阴虚质": 1} },
+                    { text: "几乎不会", score: {} },
+                    { text: "我手脚容易冰凉", score: {"阳虚质": 1} }
+                ]
+            },
+            {
+                id: 3,
+                text: "您的面部或头发是否容易出油？",
+                options: [
+                    { text: "是的，油光满面", score: {"湿热质": 2} },
+                    { text: "额头和鼻子比较油", score: {"湿热质": 1} },
+                    { text: "不怎么出油", score: {} },
+                    { text: "皮肤很干", score: {"阴虚质": 1} }
+                ]
+            },
+            {
+                id: 4,
+                text: "您感觉喉咙里经常有痰吗？",
+                options: [
+                    { text: "是的，总想清嗓子", score: {"痰湿质": 2} },
+                    { text: "早上起来的时候有", score: {"痰湿质": 1} },
+                    { text: "不几乎没有", score: {} }
+                ]
+            },
+            {
+                id: 5,
+                text: "您的情绪状态更接近以下哪种？",
+                options: [
+                    { text: "容易情绪低落或烦躁", score: {"气郁质": 2} },
+                    { text: "比较平静，偶尔有波动", score: {} },
+                    { text: "天生乐观派", score: {"平和质": 1} }
+                ]
+            },
+            {
+                id: 6,
+                text: "您是否容易过敏（如花粉、食物、宠物）？",
+                options: [
+                    { text: "是的，是\"过敏星人\"", score: {"特禀质": 2} },
+                    { text: "偶尔会有", score: {"特禀质": 1} },
+                    { text: "几乎从不过敏", score: {} }
+                ]
+            },
+            {
+                id: 7,
+                text: "您更偏爱哪种食物？",
+                options: [
+                    { text: "热乎乎的汤羹", score: {"阳虚质": 1} },
+                    { text: "清凉爽口的饮料", score: {"阴虚质": 1} },
+                    { text: "麻辣重口味的", score: {"湿热质": 1} },
+                    { text: "没有特别偏好", score: {} }
+                ]
+            },
+            {
+                id: 8,
+                text: "您的睡眠情况如何？",
+                options: [
+                    { text: "睡得晚，但睡着了就很沉", score: {"阴虚质": 1} },
+                    { text: "多梦，容易醒", score: {"血瘀质": 1} },
+                    { text: "入睡困难，思绪纷飞", score: {"气郁质": 1} },
+                    { text: "没倒头就睡，一觉到天亮", score: {"平和质": 1} }
+                ]
+            },
+            {
+                id: 9,
+                text: "您观察自己的舌苔，更接近哪种？",
+                options: [
+                    { text: "很薄很白", score: {} },
+                    { text: "很厚很白", score: {"痰湿质": 1} },
+                    { text: "又黄又厚", score: {"湿热质": 1} },
+                    { text: "很少舌苔，发红", score: {"阴虚质": 1} }
+                ]
+            }
+        ];
+
+       // 状态管理
+        let currentQuestionIndex = 0;
+        let answers = [];
+
+        // DOM 元素
+        const progressInner = document.getElementById('progressInner');
+        const questionText = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+
+        // 返回首页
+        function goBack() {
+            if (currentQuestionIndex > 0) {
+                // 如果在测试中，返回上一题
+                currentQuestionIndex--;
+                answers.pop(); // 移除上一题的答案
+                showQuestion(currentQuestionIndex);
+                updateProgress();
+            } else {
+                // 如果在第一题，返回首页
+                if (confirm('确定要退出测试吗？已选择的答案将不会被保存。')) {
+                    window.location.href = 'index.html';
+                }
+            }
+        }
+
+        // 初始化页面
+        function initTest() {
+            showQuestion(currentQuestionIndex);
+            updateProgress();
+        }
+
+        // 显示当前问题
+        function showQuestion(index) {
+            if (index >= questions.length) {
+                goToResult();
+                return;
+            }
+
+            const question = questions[index];
+            questionText.textContent = question.text;
+            
+            // 清空选项容器
+            optionsContainer.innerHTML = '';
+            
+            // 添加选项
+            question.options.forEach((option, optionIndex) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = option.text;
+                optionElement.onclick = () => selectOption(option, question.id);
+                optionsContainer.appendChild(optionElement);
+            });
+        }
+
+        // 更新进度条
+        function updateProgress() {
+            const progress = (currentQuestionIndex / questions.length) * 100;
+            progressInner.style.width = progress + '%';
+        }
+
+        // 选择选项
+        function selectOption(option, questionId) {
+            // 记录答案
+            answers.push({
+                qid: questionId,
+                selectedOption: option
+            });
+
+            // 保存到本地存储
+            localStorage.setItem('testAnswers', JSON.stringify(answers));
+
+            // 下一题或跳转到结果
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion(currentQuestionIndex);
+                updateProgress();
+            } else {
+                goToResult();
+            }
+        }
+
+        // 跳转到结果页面
+        function goToResult() {
+            window.location.href = 'result.html';
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', initTest);
+
+        // 添加键盘支持（按ESC返回）
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                goBack();
+            }
+        });
+    </script>
+
+    <!-- 背景图标签（新增） -->
+    <img src="guide-bg.png" alt="背景图" class="background-image">
+</body>
+</html>

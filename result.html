@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试结果 - 草本饮料</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .result-container {
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #a8e063, #56ab2f);
+            border-radius: 20px;
+            padding: 30px;
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .type-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .description, .tips {
+            margin-bottom: 25px;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .recommendation {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .sub-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .product {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .product-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 15px;
+        }
+
+        .product-reason {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .action-buttons {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        button {
+            flex: 1;
+            border-radius: 50px;
+            padding: 12px 0;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .share-btn {
+            background-color: #fff;
+            color: #8BC34A;
+            border: 2px solid #8BC34A;
+        }
+
+        .share-btn:active {
+            background-color: #f0f0f0;
+        }
+
+        .order-btn {
+            background-color: #ff6b6b;
+            color: #fff;
+            border: none;
+        }
+
+        .order-btn:active {
+            background-color: #e55a5a;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #666;
+            font-size: 16px;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .result-card {
+                padding: 20px;
+            }
+            
+            .type-name {
+                font-size: 1.5rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+
+        /* 背景图样式（新增） */
+        .background-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+            opacity: 0.15; /* 与test页面保持一致的透明度 */
+        }
+    </style>
+</head>
+<body>
+    <div class="result-container">
+        <div id="resultContent">
+            <div class="loading" id="loading">正在分析您的体质...</div>
+            
+            <div class="result-card" id="resultCard" style="display: none;">
+                <div class="title">你的体质是</div>
+                <div class="type-name" id="typeName"></div>
+                <div class="description" id="description"></div>
+
+                <div class="recommendation">
+                    <div class="sub-title">专属饮品推荐</div>
+                    <div id="productsContainer"></div>
+                </div>
+
+                <div class="tips" id="tips"></div>
+            </div>
+        </div>
+
+        <div class="action-buttons" id="actionButtons" style="display: none;">
+            <button class="share-btn" onclick="shareResult()">分享结果</button>
+            <button class="order-btn" onclick="goToOrder()">立即品尝</button>
+        </div>
+    </div>
+
+    <script>
+        // 体质结果映射表
+        const resultMap = {
+            '气虚质': {
+                title: '"节能模式"探索者',
+                description: '身体仿佛自带"节能模式"，容易电量不足。需要温和充电，避免透支。',
+                products: [
+                    { name: '元气参枸茶', reason: '温和补气，滋养脾胃，为你持续供能。' },
+                    { name: '黄芪红枣茶', reason: '固表补中，提升精力，对抗疲劳。' }
+                ],
+                tip: '午后小憩20分钟，比任何提神饮料都管用哦~'
+            },
+            '阴虚质': {
+                title: '"夜间精灵"养护官',
+                description: '看来你是个精力无限的夜猫子！但身体需要更多滋润来对抗熬夜的消耗。',
+                products: [
+                    { name: '雪梨百合银耳羹', reason: '润肺降燥，为你补充深层水分。' },
+                    { name: '熬夜甘菊茶', reason: '清肝明目，安抚躁动的神经。' }
+                ],
+                tip: '尝试在晚上11点前放下手机，听一段轻音乐哦~'
+            },
+            '湿热质': {
+                title: '"油腻克星"挑战者',
+                description: '身体有时像梅雨天气，需要清爽通风。重在清热祛湿，告别黏腻感。',
+                products: [
+                    { name: '赤小豆薏米水', reason: '利水渗湿，清热解毒，帮你轻松焕新。' },
+                    { name: '竹蔗茅根清露', reason: '清热泻火，生津止渴，带来清新体验。' }
+                ],
+                tip: '饮食清淡，少吃油腻辛辣，多做运动出出汗。'
+            },
+            '痰湿质': {
+                title: '"身体清道夫"',
+                description: '身体的代谢通道需要一些额外的帮助来保持畅通。化痰祛湿，一身轻松。',
+                products: [
+                    { name: '陈皮茯苓茶', reason: '燥湿化痰，理气健脾，为身体做一次大扫除。' },
+                    { name: '山楂麦芽饮', reason: '消食化积，帮助运化，减少体内垃圾堆积。' }
+                ],
+                tip: '细嚼慢咽，每餐七分饱，更适合你的身体。'
+            },
+            '气郁质': {
+                title: '"情绪按摩"大师',
+                description: '内心世界丰富细腻，情绪需要温柔疏导。喝杯茶，让心情豁然开朗。',
+                products: [
+                    { name: '玫瑰洛神饮', reason: '疏肝解郁，理气和胃，带来一份好心情。' },
+                    { name: '桂花酒酿冰博克', reason: '温散寒邪，舒缓情绪，享受甜蜜治愈。' }
+                ],
+                tip: '天气好的时候，多去公园散散步，感受自然的气息。'
+            },
+            '特禀质': {
+                title: '"敏感雷达"守护者',
+                description: '拥有高精度"感知雷达"，需要格外稳定的呵护。由内而外，强健防线。',
+                products: [
+                    { name: '黄金免疫力', reason: '益气固表，增强卫气，守护你的安全感。' }
+                ],
+                tip: '换季时节注意保暖，提前做好防护。'
+            },
+            '阳虚质': {
+                title: '"冬日暖阳"追寻者',
+                description: '身体里住着一个渴望阳光的小朋友，需要温暖与滋养。让身体暖起来~',
+                products: [
+                    { name: '黑糖姜枣茶', reason: '温中散寒，补血活血，一杯驱散寒意。' },
+                    { name: '桂圆红枣撞奶', reason: '滋补心脾，养血安神，给你温柔的呵护。' }
+                ],
+                tip: '早晨晒晒背，吸收大自然的阳气，是最好的补品。'
+            },
+            '血瘀质': {
+                title: '"通络达人"',
+                description: '身体的河流需要更顺畅地流动。活血化瘀，让面色红润，神清气爽。',
+                products: [
+                    { name: '山楂红糖饮', reason: '活血散瘀，健胃消食，让身体循环更顺畅。' },
+                    { name: '丹参玫瑰茶', reason: '活血调经，清心除烦，焕发好气色。' }
+                ],
+                tip: '尝试一些温和的拉伸运动，让身体舒展开来。'
+            },
+            '平和质': {
+                title: '"平衡艺术家"',
+                description: '恭喜你！你是健康的"平衡艺术家"。继续保持，轻养生让状态更出色。',
+                products: [
+                    { name: '四季春轻茶', reason: '轻养生，零负担，享受纯粹茶香。' }
+                ],
+                tip: '保持目前良好的生活习惯，你就是大家的养生榜样！'
+            }
+        };
+
+        // 测试题目数据（用于计算分数）
+        const allQuestions = [{
+			id: 1,
+			text: "您容易疲劳吗？",
+			options: [{
+					text: "总是，感觉浑身没劲",
+					score: {
+						"气虚质": 2
+					}
+				},
+				{
+					text: "经常，尤其是下午",
+					score: {
+						"气虚质": 1
+					}
+				},
+				{
+					text: "偶尔",
+					score: {}
+				},
+				{
+					text: "精力充沛，从不觉得累",
+					score: {
+						"平和质": 1
+					}
+				}
+			]
+		},
+		{
+			id: 2,
+			text: "您手脚心容易发热或心烦吗？",
+			options: [{
+					text: "经常，晚上尤其明显",
+					score: {
+						"阴虚质": 2
+					}
+				},
+				{
+					text: "偶尔会",
+					score: {
+						"阴虚质": 1
+					}
+				},
+				{
+					text: "几乎不会",
+					score: {}
+				},
+				{
+					text: "我手脚容易冰凉",
+					score: {
+						"阳虚质": 1
+					}
+				}
+			]
+		},
+		{
+			id: 3,
+			text: "您的面部或头发是否容易出油？",
+			options: [{
+					text: "是的，油光满面",
+					score: {
+						"湿热质": 2
+					}
+				},
+				{
+					text: "额头和鼻子比较油",
+					score: {
+						"湿热质": 1
+					}
+				},
+				{
+					text: "不怎么出油",
+					score: {}
+				},
+				{
+					text: "皮肤很干",
+					score: {
+						"阴虚质": 1
+					}
+				}
+			]
+		},
+		{
+			id: 4,
+			text: "您感觉喉咙里经常有痰吗？",
+			options: [{
+					text: "是的，总想清嗓子",
+					score: {
+						"痰湿质": 2
+					}
+				},
+				{
+					text: "早上起来的时候有",
+					score: {
+						"痰湿质": 1
+					}
+				},
+				{
+					text: "几乎没有",
+					score: {}
+				}
+			]
+		},
+		{
+			id: 5,
+			text: "您的情绪状态更接近以下哪种？",
+			options: [{
+					text: "容易情绪低落或烦躁",
+					score: {
+						"气郁质": 2
+					}
+				},
+				{
+					text: "比较平静，偶尔有波动",
+					score: {}
+				},
+				{
+					text: "天生乐观派",
+					score: {
+						"平和质": 1
+					}
+				}
+			]
+		},
+		{
+			id: 6,
+			text: "您是否容易过敏（如花粉、食物、宠物）？",
+			options: [{
+					text: "是的，是“过敏星人”",
+					score: {
+						"特禀质": 2
+					}
+				},
+				{
+					text: "偶尔会有",
+					score: {
+						"特禀质": 1
+					}
+				},
+				{
+					text: "几乎从不过敏",
+					score: {}
+				}
+			]
+		},
+		{
+			id: 7,
+			text: "您更偏爱哪种食物？",
+			options: [{
+					text: "热乎乎的汤羹",
+					score: {
+						"阳虚质": 1
+					}
+				},
+				{
+					text: "清凉爽口的饮料",
+					score: {
+						"阴虚质": 1
+					}
+				},
+				{
+					text: "麻辣重口味的",
+					score: {
+						"湿热质": 1
+					}
+				},
+				{
+					text: "没有特别偏好",
+					score: {}
+				}
+			]
+		},
+		{
+			id: 8,
+			text: "您的睡眠情况如何？",
+			options: [{
+					text: "睡得晚，但睡着了就很沉",
+					score: {
+						"阴虚质": 1
+					}
+				},
+				{
+					text: "多梦，容易醒",
+					score: {
+						"血瘀质": 1
+					} 
+				},
+				{
+					text: "入睡困难，思绪纷飞",
+					score: {
+						"气郁质": 1
+					}
+				},
+				{
+					text: "倒头就睡，一觉到天亮",
+					score: {
+						"平和质": 1
+					}
+				}
+			]
+		},
+		{
+			id: 9,
+			text: "您观察自己的舌苔，更接近哪种？",
+			options: [{
+					text: "很薄很白",
+					score: {}
+				},
+				{
+					text: "很厚很白",
+					score: {
+						"痰湿质": 1
+					}
+				},
+				{
+					text: "又黄又厚",
+					score: {
+						"湿热质": 1
+					}
+				},
+				{
+					text: "很少舌苔，发红",
+					score: {
+						"阴虚质": 1
+					}
+				}
+			]
+		}
+	];
+
+        // DOM 元素
+        const loadingElement = document.getElementById('loading');
+        const resultCard = document.getElementById('resultCard');
+        const typeName = document.getElementById('typeName');
+        const description = document.getElementById('description');
+        const productsContainer = document.getElementById('productsContainer');
+        const tips = document.getElementById('tips');
+        const actionButtons = document.getElementById('actionButtons');
+
+        // 初始化页面
+        function initResult() {
+            calculateResult();
+        }
+
+        // 计算测试结果
+        function calculateResult() {
+            try {
+                // 从本地存储获取答案
+                const answers = JSON.parse(localStorage.getItem('testAnswers'));
+                
+                if (!answers || !Array.isArray(answers)) {
+                    showError('未找到测试数据，请重新测试');
+                    return;
+                }
+
+                // 计算分数
+                let scoreSummary = {};
+
+                answers.forEach(answer => {
+                    const question = allQuestions.find(q => q.id === answer.qid);
+                    if (!question) return;
+                    
+                    const selectedOption = question.options.find(opt => opt.text === answer.selectedOption.text);
+                    if (selectedOption && selectedOption.score) {
+                        for (const [type, score] of Object.entries(selectedOption.score)) {
+                            scoreSummary[type] = (scoreSummary[type] || 0) + score;
+                        }
+                    }
+                });
+
+                // 找出最高分
+                let maxScore = 0;
+                let dominantType = '平和质';
+                for (const [type, score] of Object.entries(scoreSummary)) {
+                    if (score > maxScore) {
+                        maxScore = score;
+                        dominantType = type;
+                    }
+                }
+
+                // 显示结果
+                displayResult(resultMap[dominantType] || resultMap['平和质']);
+
+            } catch (error) {
+                console.error('计算结果失败:', error);
+                showError('获取结果失败，请重新测试');
+            }
+        }
+
+        // 显示结果
+        function displayResult(result) {
+            typeName.textContent = result.title;
+            description.textContent = result.description;
+            tips.textContent = result.tip;
+
+            // 显示推荐产品
+            productsContainer.innerHTML = '';
+            result.products.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'product';
+                productElement.innerHTML = `
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-reason">${product.reason}</div>
+                `;
+                productsContainer.appendChild(productElement);
+            });
+
+            // 隐藏加载状态，显示结果
+            loadingElement.style.display = 'none';
+            resultCard.style.display = 'block';
+            actionButtons.style.display = 'flex';
+        }
+
+        // 显示错误
+        function showError(message) {
+            loadingElement.innerHTML = `<div style="color: #ff6b6b; text-align: center;">${message}<br><button onclick="goBack()" style="margin-top: 10px; padding: 8px 16px; background: #8BC34A; color: white; border: none; border-radius: 20px; cursor: pointer;">返回测试</button></div>`;
+        }
+
+        // 返回测试
+        function goBack() {
+            window.location.href = 'test.html';
+        }
+
+        // 分享结果
+        function shareResult() {
+            alert('分享功能准备中');
+        }
+
+        // 立即品尝
+        function goToOrder() {
+            alert('此处可跳转到商品页面');
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', initResult);
+    </script>
+
+    <!-- 背景图标签（新增） -->
+    <img src="guide-bg.png" alt="背景图" class="background-image">
+</body>
+</html>
