@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>草本饮料称号测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .index-container {
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .background-image {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            object-fit: cover;
+        }
+
+        .content {
+            text-align: center;
+            color: #333;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            margin: 20px;
+        }
+
+        .title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        .start-btn {
+            background-color: #8BC34A;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            width: 200px;
+            padding: 15px 0;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin: 0 auto;
+            display: block;
+        }
+        
+        .start-btn:hover {
+            background-color: #7CB342;
+            transform: scale(0.98);
+        }
+        
+        .start-btn:active {
+            background-color: #6da03a;
+            transform: scale(0.95);
+        }
+        
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 1.5rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+                margin-bottom: 2rem;
+            }
+            
+            .content {
+                padding: 15px;
+                margin: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="index-container">
+        <!-- 注意：需要将图片放在同一目录或相应路径下 -->
+        <img src="guide-bg.png" alt="背景图" class="background-image">
+        <div class="content">
+            <div class="title">探索你的身体密码</div>
+            <div class="subtitle">定制专属你的草本茶饮</div>
+            <button class="start-btn" onclick="goToTest()">开始测试</button>
+        </div>
+    </div>
+
+    <script>
+        function goToTest() {
+            // 跳转到测试页面
+            window.location.href = 'test.html';
+        }
+        
+        // 处理移动端触摸反馈
+        document.addEventListener('touchstart', function() {}, { passive: true });
+        
+        // 防止页面缩放
+        document.addEventListener('touchmove', function(e) {
+            if (e.scale !== 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
